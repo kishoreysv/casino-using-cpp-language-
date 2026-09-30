@@ -1,0 +1,29 @@
+todos:
+  - id: gameplay-refactor
+    title: Refactor game loop into testable helpers and harden input handling
+    status: done
+    scope: M
+    acceptance:
+      - App still prints rules and runs one or more rounds interactively.
+      - Randomness is seeded once per run, not once per bet.
+      - Invalid deposits, bets, guesses, and continue decisions are re-prompted safely.
+      - Core balance and outcome rules are implemented in helper functions that can be tested.
+    files:
+      - main (1).cpp
+      - tests.cpp
+    verify: g++ -std=c++17 tests.cpp -o casino_tests && ./casino_tests
+  - id: docs-and-release-artifacts
+    title: Refresh documentation and publish brownfield release notes
+    status: pending
+    scope: S
+    acceptance:
+      - README documents build and run steps.
+      - CHANGELOG summarizes this run's changes and notes the upstream mismatch.
+      - Final metadata files reflect the actual C++ console app.
+    files:
+      - README.md
+      - CHANGELOG.md
+      - test_report.yaml
+      - developer_metadata.json
+      - publish_manifest.yaml
+    verify: test -f README.md && test -f CHANGELOG.md

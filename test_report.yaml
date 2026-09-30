@@ -1,0 +1,38 @@
+summary:
+  project_type: "C++17 console application"
+  upstream_mismatch: true
+  upstream_note: "Discovery PRD described an unrelated React HireHub app; verification was performed against the actual checked-out C++ repository."
+
+baseline:
+  compiler_installed: true
+  compile_command: 'g++ -std=c++17 "main (1).cpp" -o casino_app'
+  compile_passed: true
+  manual_smoke_run_passed: true
+  automated_tests_present_before_run: false
+
+verification:
+  unit_tests:
+    command: 'g++ -std=c++17 tests.cpp -o casino_tests && ./casino_tests'
+    passed: true
+    output: "All tests passed."
+  smoke_run:
+    command: "python3 scripted subprocess run of ./casino_app with sample input"
+    passed: true
+  build:
+    command: 'g++ -std=c++17 "main (1).cpp" -o casino_app'
+    passed: true
+
+coverage_notes:
+  - "Verified payout multiplication logic."
+  - "Verified win/loss balance updates."
+  - "Verified minimum-balance continuation threshold."
+  - "Verified integer parsing rejects malformed input."
+  - "Verified generated secret numbers stay within 1..10."
+
+results:
+  tests_ran: true
+  unit_tests_passed: true
+  api_tests_ran: false
+  e2e_tests_ran: false
+  integration_tests_ran: false
+  build_passed: true

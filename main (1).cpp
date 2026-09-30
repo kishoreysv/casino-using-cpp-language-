@@ -1,89 +1,133 @@
+#include <cctype>
 #include <iostream>
-#include <cstdlib>
-#include <ctime>
+#include <limits>
+#include <random>
+#include <sstream>
+#include <string>
+
 using namespace std;
 
-void rules();
-void round1();
+namespace casino {
 
-int main() {
-    rules();
-    cout << "\n\n";
-    round1();
-    return 0;
+struct RoundOutcome {
+    bool won;
+    int secretNumber;
+    int balanceChange;
+    int endingBalance;
+};
+
+int calculateWinnings(int betAmount) {
+    return betAmount * 10;
 }
 
-void round1() {
-    string name;
-    cout << "Enter your name: ";
-    cin >> name;
-    cout << "\n\n";
-
-    int deposit1;
-    cout << "Enter the money to deposit for the game: ";
-    cin >> deposit1;
-    cout << "\n\n";
-
-    cout << "Your current balance is " << deposit1 << "\n\n";
-
-    while (deposit1 >= 100) {
-        int bet1;
-        cout << name << ", enter the money to bet (minimum 100): ";
-        cin >> bet1;
-        cout << "\n\n";
-
-        while (bet1 > deposit1 || bet1 < 100) {
-            if (bet1 > deposit1) {
-                cout << "Money exceeds your balance.\nEnter again: ";
-            } else {
-                cout << "Minimum bet is 100.\nEnter again: ";
-            }
-            cin >> bet1;
-        }
-        cout << "\n\n";
-
-        srand(time(0)); // Seed for random number generation
-        int computer1 = rand() % 10 + 1; // Generate a number between 1 and 10
-        int guess1;
-
-        cout << "Guess a number between 1 to 10: ";
-        cin >> guess1;
-        cout << "\n\n";
-
-        while (guess1 > 10 || guess1 < 1) {
-            cout << "Number exceeds the range.\nEnter again: ";
-            cin >> guess1;
-        }
-        cout << "\n\n";
-
-        if (guess1 == computer1) {
-            cout << "You have won: " << bet1 << "\n\n";
-            int winnings = bet1 * 10;
-            deposit1 += winnings;
-            cout << "You have won " << winnings << " as total.\n";
-            cout << "Your new balance is: " << deposit1 << "\n\n";
-        } else {
-            cout << "You have lost " << bet1 << "\n\n";
-            cout << "The correct number was " << computer1 << "\n\n";
-            deposit1 -= bet1;
-            cout << "Now you have " << deposit1 << " as balance.\n\n";
-        }
-
-        if (deposit1 < 100) {
-            cout << "Your balance is less than 100. You can't continue playing. Have a nice day.\n";
-            break;
-        }
-
-        char decision;
-        cout << "Do you want to continue? (y/n): ";
-        cin >> decision;
-        cout << "\n\n";
-
-        if (decision == 'n' || decision == 'N') {
-            cout << "Have a nice day.\n";
-            break;
-        }
+RoundOutcome resolveRound(int balance, int betAmount, int guess, int secretNumber) {
+    if (guess == secretNumber) {
+        const int winnings = calculateWinnings(betAmount);
+        return {true, secretNumber, winnings, balance + winnings};
     }
+
+    return {false, secretNumber, -betAmount, balance - betAmount};
+}
+
+bool canContinueWithBalance(int balance) {
+    return balance >= 100;
+}
+
+bool parseInteger(const string& rawValue, int& parsedValue) {
+    istringstream stream(rawValue);
+    stream >> parsedValue;
+    return stream && stream.eof();
+}
+
+int promptForInteger(const string& promptMessage, const string& invalidMessage) {
+    while (true) {
+        cout << promptMessage;
+        string rawValue;
+        getline(cin, rawValue);
+
+        int parsedValue = 0;
+        if (parseInteger(rawValue, parsedValue)) {
+            return parsedValue;
+        }
+
+        cout << invalidMessage << "\n";
+    }
+}
+
+int promptForDeposit() {
+    while (true) {
+        const int deposit = promptForInteger(
+            "Enter the money to deposit for the game: ",
+            "Please enter a valid whole number."
+        );
+
+        if (canContinueWithBalance(deposit)) {
+            return deposit;
+        }
+
+        cout << "Minimum starting balance is 100.\n";
+    }
+}
+
+int promptForBet(int balance, const string& playerName) {
+    while (true) {
+        const int betAmount = promptForInteger(
+            playerName + ", enter the money to bet (minimum 100): ",
+            "Please enter a valid whole number."
+        );
+
+        if (betAmount > balance) {
+            cout << "Money exceeds your balance.\n";
+            continue;
+        }
+
+        if (betAmount < 100) {
+            cout << "Minimum bet is 100.\n";
+            continue;
+        }
+
+        return betAmount;
+    }
+}
+
+int promptForGuess() {
+    while (true) {
+        const int guess = promptForInteger(
+            "Guess a number between 1 to 10: ",
+            "Please enter a valid whole number."
+        );
+
+        if (guess >= 1 && guess <= 10) {
+            return guess;
+        }
+
+        cout << "Number exceeds the range.\n";
+    }
+}
+
+bool promptToContinue() {
+    while (true) {
+        cout << "Do you want to continue? (y/n): ";
+        string rawValue;
+        getline(cin, rawValue);
+
+        if (rawValue.size() == 1) {
+            const char decision = static_cast<char>(tolower(static_cast<unsigned char>(rawValue[0])));
+            if (decision == 'y') {
+                return true;
+            }
+            if (decision == 'n') {
+                return false;
+            }
+        }
+
+        cout << "Please enter y or n.\n";
+    }
+}
+
+int generateSecretNumber(mt19937& generator) {
+    uniform_int_distribution<int> distribution(1, 10);
+    return distribution(generator);
 }
 
 void rules() {
@@ -96,3 +140,68 @@ void rules() {
     cout << "5) The game continues until your balance drops below 100 or you choose to stop.\n";
     cout << "-------------------------------------------------------\n";
 }
+
+void playGame() {
+    cout << "Enter your name: ";
+    string name;
+    getline(cin, name);
+
+    while (name.empty()) {
+        cout << "Name cannot be empty.\n";
+        cout << "Enter your name: ";
+        getline(cin, name);
+    }
+
+    cout << "\n";
+
+    int balance = promptForDeposit();
+    cout << "\nYour current balance is " << balance << "\n\n";
+
+    random_device entropySource;
+    mt19937 generator(entropySource());
+
+    while (canContinueWithBalance(balance)) {
+        const int betAmount = promptForBet(balance, name);
+        cout << "\n";
+
+        const int secretNumber = generateSecretNumber(generator);
+        const int guess = promptForGuess();
+        cout << "\n";
+
+        const RoundOutcome outcome = resolveRound(balance, betAmount, guess, secretNumber);
+        balance = outcome.endingBalance;
+
+        if (outcome.won) {
+            cout << "You have won: " << betAmount << "\n\n";
+            cout << "You have won " << outcome.balanceChange << " as total.\n";
+            cout << "Your new balance is: " << balance << "\n\n";
+        } else {
+            cout << "You have lost " << betAmount << "\n\n";
+            cout << "The correct number was " << outcome.secretNumber << "\n\n";
+            cout << "Now you have " << balance << " as balance.\n\n";
+        }
+
+        if (!canContinueWithBalance(balance)) {
+            cout << "Your balance is less than 100. You can't continue playing. Have a nice day.\n";
+            break;
+        }
+
+        if (!promptToContinue()) {
+            cout << "Have a nice day.\n";
+            break;
+        }
+
+        cout << "\n";
+    }
+}
+
+}  // namespace casino
+
+#ifndef CASINO_TEST
+int main() {
+    casino::rules();
+    cout << "\n\n";
+    casino::playGame();
+    return 0;
+}
+#endif
