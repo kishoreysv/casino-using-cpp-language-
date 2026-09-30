@@ -14,7 +14,7 @@ todos:
     verify: g++ -std=c++17 tests.cpp -o casino_tests && ./casino_tests
   - id: docs-and-release-artifacts
     title: Refresh documentation and publish brownfield release notes
-    status: pending
+    status: done
     scope: S
     acceptance:
       - README documents build and run steps.

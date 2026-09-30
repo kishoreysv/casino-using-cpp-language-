@@ -1,0 +1,12 @@
+casino_app
+casino_tests
+graphify-out/cache/
+graphify-out/cost.json
+graphify-out/graph.html
+graphify-out/manifest.json
+graphify-out/GRAPH_REPORT.md
+graphify-out/.graphify_analysis.json
+graphify-out/.graphify_build.json
+graphify-out/.graphify_labels.json
+graphify-out/.graphify_python
+graphify-out/.graphify_root
